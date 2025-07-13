@@ -12,7 +12,6 @@ module.exports = {
 
         // --- Set Rich Presence ---
         // You can choose different activity types: PLAYING, STREAMING, LISTENING, WATCHING, CUSTOM, COMPETING
-        
         client.user.setActivity('.help to list all available commands', { type: ActivityType.Watching });
         // Example for PLAYING: client.user.setActivity('with Cinematics!', { type: ActivityType.Playing });
         // Example for STREAMING (requires a valid Twitch/YouTube URL):
