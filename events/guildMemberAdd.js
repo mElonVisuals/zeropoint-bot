@@ -7,6 +7,12 @@ const { WELCOME_CHANNEL_ID, RULES_CHANNEL_ID, INTRODUCTIONS_CHANNEL_ID, YOUTUBE_
 module.exports = {
     name: 'guildMemberAdd',
     async execute(member) {
+        // Defensive check: Ensure member.guild is available
+        if (!member.guild) {
+            console.error(`Error in guildMemberAdd: 'guild' property is undefined for member ${member.user.tag}. This usually indicates missing 'SERVER MEMBERS INTENT'.`);
+            return;
+        }
+
         // Ensure the welcome channel ID is configured
         if (!WELCOME_CHANNEL_ID || WELCOME_CHANNEL_ID === 'YOUR_WELCOME_CHANNEL_ID') {
             console.warn("WELCOME_CHANNEL_ID is not configured in config.js. Welcome message will not be sent.");
@@ -36,7 +42,7 @@ module.exports = {
 
             await channel.send({ content: `Welcome ${member.toString()}!`, embeds: [embed] });
         } else {
-            console.log(`Warning: Welcome channel with ID ${WELCOME_CHANNEL_ID} not found.`);
+            console.log(`Warning: Welcome channel with ID ${WELCOME_CHANNEL_ID} not found in guild ${member.guild.name}.`);
         }
     },
 };
