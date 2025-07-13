@@ -2,7 +2,7 @@
 // This file holds configuration constants for your bot.
 
 // --- Bot Settings ---
-module.exports.PREFIX = '!'; // The prefix for your bot's commands (e.g., !ping)
+module.exports.PREFIX = '.'; // The prefix for your bot's commands (e.g., !ping)
 
 // --- Channel IDs ---
 // To get a channel ID: Enable Developer Mode in Discord (User Settings -> Advanced),

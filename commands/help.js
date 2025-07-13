@@ -1,31 +1,120 @@
 // commands/help.js
-// Lists all available commands.
+// Displays a paginated list of all available commands.
 
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { PREFIX, ACCENT_COLOR } = require('../config.js');
+
+// Define how many commands per page
+const COMMANDS_PER_PAGE = 8; // Adjust as needed
 
 module.exports = {
     name: 'help',
-    description: '📜 Displays a list of all available commands.',
+    description: '📜 Displays a paginated list of all available commands.',
     async execute(message, args) {
-        const commands = message.client.commands; // Access the commands Collection from the client
+        const commands = Array.from(message.client.commands.values()); // Get all commands as an array
 
-        const embed = new EmbedBuilder()
-            .setTitle('📚 ZeroPoint Bot Commands')
-            .setDescription(`My prefix is \`${PREFIX}\`\nHere's a list of all my commands:`)
-            .setColor(ACCENT_COLOR)
-            .setThumbnail('https://melonvisuals.me/test/zeropoint.png')
-            .setFooter({ text: 'ZeroPoint | Command List' });
+        // Filter out commands that might not have a description or are internal
+        const publicCommands = commands.filter(cmd => cmd.description && !cmd.hidden);
 
-        // Iterate over the commands and add them to the embed fields
-        commands.forEach(command => {
-            embed.addFields({
-                name: `\`${PREFIX}${command.name}\``,
-                value: command.description || 'No description provided.',
-                inline: true // Display commands in a compact grid
+        const totalPages = Math.ceil(publicCommands.length / COMMANDS_PER_PAGE);
+        let currentPage = 0;
+
+        // Function to create an embed for a specific page
+        const createHelpEmbed = (page) => {
+            const start = page * COMMANDS_PER_PAGE;
+            const end = start + COMMANDS_PER_PAGE;
+            const commandsToShow = publicCommands.slice(start, end);
+
+            const embed = new EmbedBuilder()
+                .setTitle('📚 ZeroPoint Bot Commands')
+                .setDescription(`My prefix is \`${PREFIX}\`\nNavigate through commands using the buttons below.`)
+                .setColor(ACCENT_COLOR)
+                .setThumbnail('https://melonvisuals.me/test/zeropoint.png')
+                .setFooter({ text: `Page ${page + 1} / ${totalPages} | ZeroPoint Command List` });
+
+            if (commandsToShow.length === 0) {
+                embed.addFields({ name: 'No Commands Found', value: 'There are no commands to display on this page.' });
+            } else {
+                commandsToShow.forEach(command => {
+                    embed.addFields({
+                        name: `\`${PREFIX}${command.name}\``,
+                        value: command.description || 'No description provided.',
+                        inline: true
+                    });
+                });
+            }
+            return embed;
+        };
+
+        // Function to create action row with buttons
+        const createButtons = (page) => {
+            return new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('help_previous')
+                        .setLabel('⬅️ Previous')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(page === 0), // Disable 'Previous' on the first page
+                    new ButtonBuilder()
+                        .setCustomId('help_next')
+                        .setLabel('Next ➡️')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(page === totalPages - 1) // Disable 'Next' on the last page
+                );
+        };
+
+        // Send the initial help message with the first page and buttons
+        const initialEmbed = createHelpEmbed(currentPage);
+        const initialButtons = createButtons(currentPage);
+
+        const replyMessage = await message.channel.send({
+            embeds: [initialEmbed],
+            components: [initialButtons],
+            fetchReply: true // Important to fetch the message to create a collector on it
+        });
+
+        // Create a collector to listen for button interactions on this specific message
+        const collector = replyMessage.createMessageComponentCollector({
+            filter: i => i.customId.startsWith('help_') && i.user.id === message.author.id, // Only collect interactions from the command invoker
+            time: 60000 // Collector expires after 60 seconds
+        });
+
+        collector.on('collect', async i => {
+            if (i.customId === 'help_next') {
+                currentPage++;
+            } else if (i.customId === 'help_previous') {
+                currentPage--;
+            }
+
+            const newEmbed = createHelpEmbed(currentPage);
+            const newButtons = createButtons(currentPage);
+
+            // Update the message with the new embed and button states
+            await i.update({
+                embeds: [newEmbed],
+                components: [newButtons]
             });
         });
 
-        await message.channel.send({ embeds: [embed] });
+        collector.on('end', async collected => {
+            // Disable all buttons when the collector expires
+            const disabledButtons = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('help_previous_disabled')
+                        .setLabel('⬅️ Previous')
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(true),
+                    new ButtonBuilder()
+                        .setCustomId('help_next_disabled')
+                        .setLabel('Next ➡️')
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(true)
+                );
+            // Only edit if the message hasn't been deleted
+            if (replyMessage.editable) {
+                await replyMessage.edit({ components: [disabledButtons] }).catch(console.error);
+            }
+        });
     },
 };
