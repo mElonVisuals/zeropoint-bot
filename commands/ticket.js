@@ -4,6 +4,10 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
 const { ACCENT_COLOR, TICKET_CATEGORY_ID, TICKET_LOG_CHANNEL_ID, STAFF_ROLE_ID, ZEROPOINT_LOGO_URL } = require('../config.js');
 
+// --- DEBUGGING: Check InteractionResponseFlags immediately after import ---
+console.log(`[DEBUG - TICKET] InteractionResponseFlags at top of file:`, InteractionResponseFlags);
+// --- END DEBUGGING ---
+
 module.exports = {
     name: 'ticket',
     description: '🎫 Sets up the ticket creation panel.',
@@ -181,7 +185,7 @@ module.exports = {
                             }
 
                             console.log(`[DEBUG - TICKET] User ${closeInteraction.user.tag} initiated ticket closure.`);
-                            await closeInteraction.editReply({ content: '🔒 Closing ticket..', flags: [InteractionResponseFlags.Ephemeral] });
+                            await closeInteraction.editReply({ content: '🔒 Closing ticket...', flags: [InteractionResponseFlags.Ephemeral] });
 
                             // Log ticket closure
                             if (logChannel) {
