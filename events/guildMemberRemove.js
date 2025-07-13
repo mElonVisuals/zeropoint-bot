@@ -7,15 +7,23 @@ const { FAREWELL_CHANNEL_ID, ACCENT_COLOR } = require('../config.js');
 module.exports = {
     name: 'guildMemberRemove',
     async execute(member) {
+        console.log(`[DEBUG] guildMemberRemove event triggered for user: ${member.user.tag} (ID: ${member.user.id})`);
+        console.log(`[DEBUG] Initial member.partial: ${member.partial}`);
+        console.log(`[DEBUG] Initial member.guild: ${member.guild ? 'Defined' : 'Undefined'}`);
+
         try {
             // If the member is a partial, fetch the full member object.
+            // This is crucial if SERVER MEMBERS INTENT is enabled but data is still partial.
             if (member.partial) {
+                console.log(`[DEBUG] Member is partial. Attempting to fetch full member object.`);
                 member = await member.fetch();
+                console.log(`[DEBUG] Member fetched. New member.partial: ${member.partial}`);
+                console.log(`[DEBUG] New member.guild after fetch: ${member.guild ? 'Defined' : 'Undefined'}`);
             }
 
             // After fetching (or if not partial), check if guild is available.
             if (!member.guild) {
-                console.error(`Error in guildMemberRemove: 'guild' property is still undefined for member ${member.user.tag} after fetching. SERVER MEMBERS INTENT might not be fully applied or there's another issue.`);
+                console.error(`Error in guildMemberRemove: 'guild' property is still undefined for member ${member.user.tag} (ID: ${member.user.id}) after fetching. This strongly indicates 'SERVER MEMBERS INTENT' is not fully applied or there's a deeper issue.`);
                 return;
             }
 
@@ -40,7 +48,7 @@ module.exports = {
                 console.log(`Warning: Farewell channel with ID ${FAREWELL_CHANNEL_ID} not found in guild ${member.guild.name}.`);
             }
         } catch (error) {
-            console.error(`An error occurred in guildMemberRemove for ${member.user.tag}:`, error);
+            console.error(`An error occurred in guildMemberRemove for ${member.user.tag} (ID: ${member.user.id}):`, error);
             // This catch block will handle errors during fetching or other operations within the event.
         }
     },
