@@ -6,24 +6,24 @@ const fs = require('node:fs'); // Node.js file system module for reading directo
 const path = require('node:path'); // Node.js path module for resolving file paths
 
 const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
-const { PREFIX, ZEROPOINT_LOGO_URL } = require('./config.js'); // Import configuration constants
+const { PREFIX } = require('./config.js'); // Import configuration constants
 
 // --- Bot Initialization ---
 
 // Define the intents your bot will use.
-// Intents specify which events your bot wants to receive from Discord.
-// You MUST enable 'MESSAGE CONTENT INTENT', 'PRESENCE INTENT', and 'SERVER MEMBERS INTENT'
-// in the Discord Developer Portal for your bot to function correctly.
+// Temporarily reducing intents for troubleshooting "Used disallowed intents" error.
+// Ensure these are enabled in Discord Developer Portal.
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,           // Required for guild-related events (e.g., guildMemberAdd, channelCreate)
         GatewayIntentBits.GuildMessages,    // Required to receive messages
         GatewayIntentBits.MessageContent,   // CRUCIAL: Required to read the content of messages for commands
         GatewayIntentBits.GuildMembers,     // CRUCIAL: Required for guildMemberAdd/Remove events
-        GatewayIntentBits.GuildPresences,   // Required for setting/updating bot presence
-        GatewayIntentBits.DirectMessages,   // Optional: If you want to handle DMs
-        GatewayIntentBits.GuildMessageReactions, // Optional: If you want to handle reactions
-        GatewayIntentBits.GuildVoiceStates  // Optional: If you want to monitor voice channels
+        GatewayIntentBits.GuildPresences    // Required for setting/updating bot presence
+        // Temporarily commented out for troubleshooting:
+        // GatewayIntentBits.DirectMessages,
+        // GatewayIntentBits.GuildMessageReactions,
+        // GatewayIntentBits.GuildVoiceStates
     ],
     partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User]
 });
