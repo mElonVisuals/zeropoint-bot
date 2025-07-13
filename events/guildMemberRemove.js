@@ -7,8 +7,14 @@ const { FAREWELL_CHANNEL_ID, ACCENT_COLOR } = require('../config.js');
 module.exports = {
     name: 'guildMemberRemove',
     async execute(member) {
+        // Defensive check: Ensure member.guild is available
+        if (!member.guild) {
+            console.error(`Error in guildMemberRemove: 'guild' property is undefined for member ${member.user.tag}. This usually indicates missing 'SERVER MEMBERS INTENT'.`);
+            return;
+        }
+
         // Ensure the farewell channel ID is configured
-        if (!FAREWELL_CHANNEL_ID || FAREWELL_CHANNEL_ID === 'YOUR_FAREWELL_CHANNEL_ID') {
+        if (!FAREWELL_CHANNEL_ID || FAREWELL_CHANNEL_ID === '1393972301485314138') {
             console.warn("FAREWELL_CHANNEL_ID is not configured in config.js. Farewell message will not be sent.");
             return;
         }
@@ -25,7 +31,7 @@ module.exports = {
 
             await channel.send({ embeds: [embed] });
         } else {
-            console.log(`Warning: Farewell channel with ID ${FAREWELL_CHANNEL_ID} not found.`);
+            console.log(`Warning: Farewell channel with ID ${FAREWELL_CHANNEL_ID} not found in guild ${member.guild.name}.`);
         }
     },
 };
