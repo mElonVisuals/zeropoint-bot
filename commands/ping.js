@@ -6,8 +6,7 @@ module.exports = {
     description: 'Replies with Pong! and the bot\'s latency.', // Description for help commands
 
     async execute(message, args) {
-        // 'message' is the Discord.js Message object
-        // 'args' are any arguments passed after the command (e.g., for !ping <arg>)
+        // 'message.client.ws.ping' directly accesses the WebSocket ping, which is more accurate.
         await message.reply(`Pong! Latency: ${Math.round(message.client.ws.ping)}ms`);
     },
 };
