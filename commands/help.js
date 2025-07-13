@@ -1,7 +1,7 @@
 // commands/help.js
 // Displays a paginated list of all available commands.
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
 const { PREFIX, ACCENT_COLOR } = require('../config.js');
 
 // Define how many commands per page
@@ -86,7 +86,9 @@ module.exports = {
         collector.on('collect', async i => {
             console.log(`[DEBUG - HELP] Button '${i.customId}' collected by ${i.user.tag}`);
             try {
+                console.log(`[DEBUG - HELP] Attempting deferUpdate for '${i.customId}'`);
                 await i.deferUpdate(); // Acknowledge the interaction immediately
+                console.log(`[DEBUG - HELP] deferUpdate successful for '${i.customId}'`);
 
                 if (i.customId === 'help_next') {
                     currentPage++;
@@ -99,7 +101,7 @@ module.exports = {
                 const newButtons = createButtons(currentPage);
 
                 // Update the message with the new embed and button states
-                await i.editReply({ // Use editReply after deferUpdate
+                await i.editReply({
                     embeds: [newEmbed],
                     components: [newButtons]
                 });
@@ -108,7 +110,7 @@ module.exports = {
                 console.error(`[ERROR - HELP] Failed to update help message for ${i.user.tag} on button '${i.customId}':`, error);
                 // Try to send a follow-up if deferUpdate failed or subsequent editReply failed
                 if (!i.replied && !i.deferred) {
-                    await i.reply({ content: '❌ An error occurred while updating the help page. Please try again.', ephemeral: true }).catch(e => console.error("Failed to send follow-up reply:", e));
+                    await i.reply({ content: '❌ An error occurred while updating the help page. Please try again.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send follow-up reply:", e));
                 }
             }
         });

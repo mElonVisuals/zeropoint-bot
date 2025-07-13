@@ -1,7 +1,7 @@
 // commands/clear.js
 // Command to delete a specified number of messages.
 
-const { PermissionsBitField, ChannelType } = require('discord.js');
+const { PermissionsBitField, ChannelType, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
 const { ACCENT_COLOR } = require('../config.js');
 
 module.exports = {
@@ -10,19 +10,19 @@ module.exports = {
     async execute(message, args) {
         // Check if the user has the MANAGE_MESSAGES permission
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-            return message.reply({ content: '❌ You do not have permission to use this command. You need the `Manage Messages` permission.', ephemeral: true });
+            return message.reply({ content: '❌ You do not have permission to use this command. You need the `Manage Messages` permission.', flags: [InteractionResponseFlags.Ephemeral] });
         }
 
         // Ensure the command is not used in a DM channel
         if (message.channel.type === ChannelType.DM) {
-            return message.reply({ content: '❌ I cannot delete messages in Direct Messages.', ephemeral: true });
+            return message.reply({ content: '❌ I cannot delete messages in Direct Messages.', flags: [InteractionResponseFlags.Ephemeral] });
         }
 
         const amount = parseInt(args[0]);
 
         // Check if a valid number is provided
         if (isNaN(amount) || amount <= 0 || amount > 99) {
-            return message.reply({ content: '🔢 Please provide a number between 1 and 99 for messages to delete.', ephemeral: true });
+            return message.reply({ content: '🔢 Please provide a number between 1 and 99 for messages to delete.', flags: [InteractionResponseFlags.Ephemeral] });
         }
 
         try {
@@ -39,9 +39,9 @@ module.exports = {
             console.error('Error clearing messages:', error);
             // Provide a more specific error message if it's a known Discord API error
             if (error.code === 50034) { // Discord API error code for messages older than 14 days
-                return message.reply({ content: '⚠️ Cannot delete messages older than 14 days using this command.', ephemeral: true });
+                return message.reply({ content: '⚠️ Cannot delete messages older than 14 days using this command.', flags: [InteractionResponseFlags.Ephemeral] });
             }
-            message.reply({ content: '❌ There was an error trying to clear messages in this channel.', ephemeral: true });
+            message.reply({ content: '❌ There was an error trying to clear messages in this channel.', flags: [InteractionResponseFlags.Ephemeral] });
         }
     },
 };

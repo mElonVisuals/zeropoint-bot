@@ -5,7 +5,7 @@ require('dotenv').config(); // Load environment variables from .env file (for lo
 const fs = require('node:fs'); // Node.js file system module for reading directories
 const path = require('node:path'); // Node.js path module for resolving file paths
 
-const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
 const { PREFIX } = require('./config.js'); // Import configuration constants
 
 // --- Bot Initialization ---
@@ -23,7 +23,7 @@ const client = new Client({
         GatewayIntentBits.GuildPresences,   // Required for setting/updating bot presence
         GatewayIntentBits.DirectMessages,   // Optional: If you want to handle DMs
         GatewayIntentBits.GuildMessageReactions, // Optional: If you want to handle reactions
-        GatewayIntentBits.GuildVoiceStates  // NEW: Required for voiceStateUpdate event
+        GatewayIntentBits.GuildVoiceStates  // Required for voiceStateUpdate event
     ],
     partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User]
 });
@@ -86,9 +86,9 @@ client.on('messageCreate', async message => {
         console.error(`Error executing command ${commandName}:`, error);
         // Reply ephemerally if possible, otherwise send a regular message
         if (message.replied || message.deferred) {
-            await message.followUp({ content: 'There was an error trying to execute that command!', ephemeral: true });
+            await message.followUp({ content: 'There was an error trying to execute that command!', flags: [InteractionResponseFlags.Ephemeral] }); // Using flags
         } else {
-            await message.reply({ content: 'There was an error trying to execute that command!', ephemeral: true });
+            await message.reply({ content: 'There was an error trying to execute that command!', flags: [InteractionResponseFlags.Ephemeral] }); // Using flags
         }
     }
 });

@@ -1,7 +1,7 @@
 // commands/ticket.js
 // Implements a simple ticket system with button interactions.
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
 const { ACCENT_COLOR, TICKET_CATEGORY_ID, TICKET_LOG_CHANNEL_ID, STAFF_ROLE_ID, ZEROPOINT_LOGO_URL } = require('../config.js');
 
 module.exports = {
@@ -10,18 +10,18 @@ module.exports = {
     async execute(message, args) {
         // Ensure only users with Manage Channels permission can set up the panel
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
-            return message.reply({ content: '❌ You do not have permission to set up the ticket panel. You need the `Manage Channels` permission.', ephemeral: true });
+            return message.reply({ content: '❌ You do not have permission to set up the ticket panel. You need the `Manage Channels` permission.', flags: [InteractionResponseFlags.Ephemeral] });
         }
 
         // Basic validation for config IDs
         if (!TICKET_CATEGORY_ID || TICKET_CATEGORY_ID === 'YOUR_TICKET_CATEGORY_ID') {
-            return message.reply({ content: '❌ Ticket category ID is not configured in `config.js`. Please set `TICKET_CATEGORY_ID`.', ephemeral: true });
+            return message.reply({ content: '❌ Ticket category ID is not configured in `config.js`. Please set `TICKET_CATEGORY_ID`.', flags: [InteractionResponseFlags.Ephemeral] });
         }
         if (!TICKET_LOG_CHANNEL_ID || TICKET_LOG_CHANNEL_ID === 'YOUR_TICKET_LOG_CHANNEL_ID') {
-            return message.reply({ content: '❌ Ticket log channel ID is not configured in `config.js`. Please set `TICKET_LOG_CHANNEL_ID`.', ephemeral: true });
+            return message.reply({ content: '❌ Ticket log channel ID is not configured in `config.js`. Please set `TICKET_LOG_CHANNEL_ID`.', flags: [InteractionResponseFlags.Ephemeral] });
         }
         if (!STAFF_ROLE_ID || STAFF_ROLE_ID === 'YOUR_STAFF_ROLE_ID') {
-            return message.reply({ content: '❌ Staff Role ID is not configured in `config.js`. Please set `STAFF_ROLE_ID`.', ephemeral: true });
+            return message.reply({ content: '❌ Staff Role ID is not configured in `config.js`. Please set `STAFF_ROLE_ID`.', flags: [InteractionResponseFlags.Ephemeral] });
         }
 
         const ticketPanelEmbed = new EmbedBuilder()
@@ -60,7 +60,9 @@ module.exports = {
         collector.on('collect', async interaction => {
             console.log(`[DEBUG - TICKET] Create ticket button collected by ${interaction.user.tag}`);
             try {
-                await interaction.deferReply({ ephemeral: true }); // Acknowledge interaction immediately
+                console.log(`[DEBUG - TICKET] Attempting deferReply for create_ticket`);
+                await interaction.deferReply({ flags: [InteractionResponseFlags.Ephemeral] }); // Acknowledge interaction immediately
+                console.log(`[DEBUG - TICKET] deferReply successful for create_ticket`);
 
                 const guild = interaction.guild;
                 const user = interaction.user;
@@ -73,7 +75,7 @@ module.exports = {
 
                 if (existingChannel) {
                     console.log(`[DEBUG - TICKET] User ${user.tag} already has an open ticket.`);
-                    return interaction.editReply({ content: `You already have an open ticket: <#${existingChannel.id}>`, ephemeral: true });
+                    return interaction.editReply({ content: `You already have an open ticket: <#${existingChannel.id}>`, flags: [InteractionResponseFlags.Ephemeral] });
                 }
 
                 try {
@@ -141,7 +143,7 @@ module.exports = {
                     });
 
                     console.log(`[DEBUG - TICKET] Replying to interaction: Ticket created.`);
-                    await interaction.editReply({ content: `✅ Your ticket has been created: <#${ticketChannel.id}>`, ephemeral: true });
+                    await interaction.editReply({ content: `✅ Your ticket has been created: <#${ticketChannel.id}>`, flags: [InteractionResponseFlags.Ephemeral] });
 
                     // Log ticket creation
                     const logChannel = guild.channels.cache.get(TICKET_LOG_CHANNEL_ID);
@@ -168,16 +170,18 @@ module.exports = {
                     closeCollector.on('collect', async closeInteraction => {
                         console.log(`[DEBUG - TICKET] Close ticket button collected by ${closeInteraction.user.tag}`);
                         try {
-                            await closeInteraction.deferReply({ ephemeral: true }); // Acknowledge interaction immediately
+                            console.log(`[DEBUG - TICKET] Attempting deferReply for close_ticket`);
+                            await closeInteraction.deferReply({ flags: [InteractionResponseFlags.Ephemeral] }); // Acknowledge interaction immediately
+                            console.log(`[DEBUG - TICKET] deferReply successful for close_ticket`);
 
                             // Only allow ticket creator or staff to close
                             if (closeInteraction.user.id !== user.id && !closeInteraction.member.roles.cache.has(STAFF_ROLE_ID)) {
                                 console.log(`[DEBUG - TICKET] User ${closeInteraction.user.tag} tried to close ticket without permission.`);
-                                return closeInteraction.editReply({ content: '❌ Only the ticket creator or staff can close this ticket.', ephemeral: true });
+                                return closeInteraction.editReply({ content: '❌ Only the ticket creator or staff can close this ticket.', flags: [InteractionResponseFlags.Ephemeral] });
                             }
 
                             console.log(`[DEBUG - TICKET] User ${closeInteraction.user.tag} initiated ticket closure.`);
-                            await closeInteraction.editReply({ content: '🔒 Closing ticket...', ephemeral: true });
+                            await closeInteraction.editReply({ content: '🔒 Closing ticket...', flags: [InteractionResponseFlags.Ephemeral] });
 
                             // Log ticket closure
                             if (logChannel) {
@@ -202,7 +206,9 @@ module.exports = {
                         } catch (error) {
                             console.error(`[ERROR - TICKET] Error during ticket closure for ${closeInteraction.user.tag}:`, error);
                             if (!closeInteraction.replied && !closeInteraction.deferred) {
-                                await closeInteraction.reply({ content: '❌ An error occurred while trying to close the ticket. Please try again.', ephemeral: true }).catch(e => console.error("Failed to send follow-up reply for close error:", e));
+                                await closeInteraction.reply({ content: '❌ An error occurred while trying to close the ticket. Please try again.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send follow-up reply for close error:", e));
+                            } else {
+                                await closeInteraction.editReply({ content: '❌ An error occurred while trying to close the ticket. Please try again.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send editReply for close error:", e));
                             }
                         }
                     });
@@ -210,35 +216,37 @@ module.exports = {
                     closeCollector.on('end', async collected => {
                         console.log(`[DEBUG - TICKET] Close ticket collector ended. Collected ${collected.size} interactions.`);
                         // If ticket wasn't closed by button, disable the button
-                        if (ticketChannel.deletable && ticketChannel.messages) { // Check if channel still exists and can send messages
-                            const lastMessage = await ticketChannel.messages.fetch({ limit: 1 }).then(msg => msg.first()).catch(e => console.error("Failed to fetch last message for disabling close button:", e));
-                            if (lastMessage && lastMessage.components.length > 0 && lastMessage.components[0].components[0].customId === 'close_ticket') {
-                                const disabledCloseRow = new ActionRowBuilder().addComponents(
-                                    new ButtonBuilder()
-                                        .setCustomId('close_ticket_disabled')
-                                        .setLabel('Ticket Expired')
-                                        .setStyle(ButtonStyle.Secondary)
-                                        .setEmoji('⛔')
-                                        .setDisabled(true)
-                                );
-                                await lastMessage.edit({ components: [disabledCloseRow] }).catch(e => console.error("Failed to disable close ticket button:", e));
-                                console.log(`[DEBUG - TICKET] Close ticket button disabled.`);
-                            }
+                        // Fetch the message again to ensure it's still accessible before editing
+                        const messageToEdit = await ticketChannel.messages.fetch(collected.first()?.message.id || '').catch(() => null);
+
+                        if (messageToEdit && messageToEdit.editable) {
+                            const disabledCloseRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId('close_ticket_disabled')
+                                    .setLabel('Ticket Expired')
+                                    .setStyle(ButtonStyle.Secondary)
+                                    .setEmoji('⛔')
+                                    .setDisabled(true)
+                            );
+                            await messageToEdit.edit({ components: [disabledCloseRow] }).catch(e => console.error("Failed to disable close ticket button:", e));
+                            console.log(`[DEBUG - TICKET] Close ticket button disabled.`);
+                        } else {
+                            console.log(`[DEBUG - TICKET] Could not disable close ticket button (message not editable or found).`);
                         }
                     });
 
 
                 } catch (error) {
                     console.error('Error creating ticket channel:', error);
-                    await interaction.editReply({ content: '❌ There was an error creating your ticket. Please try again later.', ephemeral: true });
+                    await interaction.editReply({ content: '❌ There was an error creating your ticket. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] });
                 }
             } catch (error) {
                 console.error(`[ERROR - TICKET] Error during ticket creation for ${interaction.user.tag}:`, error);
                 // If deferReply already happened, use editReply, otherwise reply
                 if (!interaction.replied && !interaction.deferred) {
-                     await interaction.reply({ content: '❌ An unexpected error occurred. Please try again later.', ephemeral: true }).catch(e => console.error("Failed to send initial error reply:", e));
+                     await interaction.reply({ content: '❌ An unexpected error occurred. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send initial error reply:", e));
                 } else {
-                     await interaction.editReply({ content: '❌ An unexpected error occurred. Please try again later.', ephemeral: true }).catch(e => console.error("Failed to send editReply for error:", e));
+                     await interaction.editReply({ content: '❌ An unexpected error occurred. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send editReply for error:", e));
                 }
             }
         });

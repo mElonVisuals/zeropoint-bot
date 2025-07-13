@@ -15,14 +15,19 @@ module.exports = {
                     // Fetch the message. If it fails, the message might be too old or unavailable.
                     message = await message.fetch();
                 } catch (error) {
-                    console.warn(`[WARN] Could not fetch partial message (ID: ${message.id}). It might have been deleted too quickly, is too old, or is unavailable. Skipping log.`);
+                    console.warn(`[WARN] Could not fetch partial message (ID: ${message.id || 'unknown'}). It might have been deleted too quickly or is unavailable. Skipping log.`);
                     // If fetching fails, we can't log details, so we exit.
                     return;
                 }
             }
 
-            // After fetching (or if not partial), check if message.author is available.
-            // This handles cases where the author might be unavailable (e.g., deleted user, webhook without full info).
+            // Ensure message.id is available for logging
+            if (!message.id) {
+                console.warn(`[WARN] Message (ID: undefined) has no ID available. Skipping log.`);
+                return;
+            }
+
+            // Ensure author is available after fetching
             if (!message.author) {
                 console.warn(`[WARN] Message (ID: ${message.id}) has no author information available. Skipping log.`);
                 return;
