@@ -80,23 +80,37 @@ module.exports = {
         });
 
         collector.on('collect', async i => {
-            if (i.customId === 'help_next') {
-                currentPage++;
-            } else if (i.customId === 'help_previous') {
-                currentPage--;
+            console.log(`[DEBUG - HELP] Button '${i.customId}' collected by ${i.user.tag}`);
+            try {
+                await i.deferUpdate(); // Acknowledge the interaction immediately
+
+                if (i.customId === 'help_next') {
+                    currentPage++;
+                } else if (i.customId === 'help_previous') {
+                    currentPage--;
+                }
+
+                console.log(`[DEBUG - HELP] Updating to page ${currentPage + 1}`);
+                const newEmbed = createHelpEmbed(currentPage);
+                const newButtons = createButtons(currentPage);
+
+                // Update the message with the new embed and button states
+                await i.editReply({ // Use editReply after deferUpdate
+                    embeds: [newEmbed],
+                    components: [newButtons]
+                });
+                console.log(`[DEBUG - HELP] Message updated successfully for page ${currentPage + 1}`);
+            } catch (error) {
+                console.error(`[ERROR - HELP] Failed to update help message for ${i.user.tag} on button '${i.customId}':`, error);
+                // Try to send a follow-up if deferUpdate failed or subsequent editReply failed
+                if (!i.replied && !i.deferred) {
+                    await i.reply({ content: '❌ An error occurred while updating the help page. Please try again.', ephemeral: true }).catch(e => console.error("Failed to send follow-up reply:", e));
+                }
             }
-
-            const newEmbed = createHelpEmbed(currentPage);
-            const newButtons = createButtons(currentPage);
-
-            // Update the message with the new embed and button states
-            await i.update({
-                embeds: [newEmbed],
-                components: [newButtons]
-            });
         });
 
         collector.on('end', async collected => {
+            console.log(`[DEBUG - HELP] Help collector ended. Collected ${collected.size} interactions.`);
             // Disable all buttons when the collector expires
             const disabledButtons = new ActionRowBuilder()
                 .addComponents(
@@ -113,7 +127,7 @@ module.exports = {
                 );
             // Only edit if the message hasn't been deleted
             if (replyMessage.editable) {
-                await replyMessage.edit({ components: [disabledButtons] }).catch(console.error);
+                await replyMessage.edit({ components: [disabledButtons] }).catch(e => console.error("Failed to disable help buttons:", e));
             }
         });
     },
