@@ -6,15 +6,15 @@ const { WEBSITE_URL, ACCENT_COLOR, ZEROPOINT_LOGO_URL } = require('../config.js'
 
 module.exports = {
     name: 'website',
-    description: 'Provides a link to the ZeroPoint official website.',
+    description: '🌐 Provides a link to the ZeroPoint official website.',
     async execute(message, args) {
         const embed = new EmbedBuilder()
-            .setTitle('🌐 Visit the ZeroPoint Website!')
+            .setTitle('🔗 Visit the ZeroPoint Website!')
             .setDescription(`Explore our portfolio, services, and more on our official website:`)
             .setURL(WEBSITE_URL) // Make the title a clickable link
             .setColor(ACCENT_COLOR)
             .addFields({
-                name: 'Link:',
+                name: 'Click Here:',
                 value: `[ZeroPoint Official Website](${WEBSITE_URL})`,
                 inline: false
             })

@@ -6,10 +6,10 @@ const { COMMISSION_INFO_CHANNEL_ID, ACCENT_COLOR, ZEROPOINT_LOGO_URL } = require
 
 module.exports = {
     name: 'commission',
-    description: 'Provides information on how to start a cinematic commission.',
+    description: '🎬 Provides information on how to start a cinematic commission.',
     async execute(message, args) {
         const embed = new EmbedBuilder()
-            .setTitle('🎬 Start Your ZeroPoint Commission!')
+            .setTitle('✨ Start Your ZeroPoint Commission!')
             .setDescription('Ready to bring your vision to life? Our team is here to help you create stunning cinematics.')
             .setColor(ACCENT_COLOR)
             .addFields(

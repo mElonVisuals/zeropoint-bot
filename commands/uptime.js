@@ -6,7 +6,7 @@ const { ACCENT_COLOR } = require('../config.js');
 
 module.exports = {
     name: 'uptime',
-    description: 'Shows how long the bot has been online.',
+    description: '⏱️ Shows how long the bot has been online.',
     async execute(message, args) {
         let totalSeconds = (message.client.uptime / 1000);
         let days = Math.floor(totalSeconds / 86400);
@@ -17,7 +17,7 @@ module.exports = {
         let seconds = Math.floor(totalSeconds % 60);
 
         const uptimeEmbed = new EmbedBuilder()
-            .setTitle('Bot Uptime')
+            .setTitle('📊 Bot Uptime Status')
             .setDescription(`I have been online for: \`${days} days, ${hours} hours, ${minutes} minutes, and ${seconds} seconds.\``)
             .setColor(ACCENT_COLOR)
             .setFooter({ text: 'ZeroPoint | System Status' });

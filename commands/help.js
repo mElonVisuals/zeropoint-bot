@@ -6,12 +6,12 @@ const { PREFIX, ACCENT_COLOR } = require('../config.js');
 
 module.exports = {
     name: 'help',
-    description: 'Lists all available commands.',
+    description: '📜 Displays a list of all available commands.',
     async execute(message, args) {
         const commands = message.client.commands; // Access the commands Collection from the client
 
         const embed = new EmbedBuilder()
-            .setTitle('ZeroPoint Bot Commands')
+            .setTitle('📚 ZeroPoint Bot Commands')
             .setDescription(`My prefix is \`${PREFIX}\`\nHere's a list of all my commands:`)
             .setColor(ACCENT_COLOR)
             .setThumbnail('https://melonvisuals.me/test/zeropoint.png')

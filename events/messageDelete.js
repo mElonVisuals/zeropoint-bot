@@ -9,8 +9,9 @@ module.exports = {
     async execute(message) {
         // Ignore messages from bots to prevent logging bot's own deleted messages
         if (message.author.bot) return;
+        // Ignore DMs
+        if (!message.guild) return;
 
-        // Ensure the log channel ID is configured
         if (!LOG_CHANNEL_ID || LOG_CHANNEL_ID === 'YOUR_LOG_CHANNEL_ID') {
             console.warn("LOG_CHANNEL_ID is not configured in config.js. Deleted messages will not be logged.");
             return;
@@ -30,8 +31,6 @@ module.exports = {
                 .setFooter({ text: 'ZeroPoint | Moderation Log' });
 
             await logChannel.send({ embeds: [embed] });
-        } else {
-            console.log(`Warning: Log channel with ID ${LOG_CHANNEL_ID} not found.`);
         }
     },
 };

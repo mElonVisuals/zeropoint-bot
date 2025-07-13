@@ -9,6 +9,8 @@ module.exports.PREFIX = '!'; // The prefix for your bot's commands (e.g., !ping)
 // then right-click on a channel and select "Copy ID".
 module.exports.WELCOME_CHANNEL_ID = '1365071343414018078'; // Replace with your actual Welcome channel ID
 module.exports.RULES_CHANNEL_ID = '1364678092362223716'; // Replace with your actual Rules channel ID
+module.exports.FAREWELL_CHANNEL_ID = '1393972301485314138'; // NEW: Channel for farewell messages
+module.exports.LOG_CHANNEL_ID = '1369865705238954168'; // NEW: Channel for bot logs (e.g., deleted messages)
 module.exports.INTRODUCTIONS_CHANNEL_ID = '1393953737197879396'; // Replace with your actual Introductions channel ID
 module.exports.COMMISSION_INFO_CHANNEL_ID = '1393741240922542192'; // Replace with your actual Commission Info channel ID
 

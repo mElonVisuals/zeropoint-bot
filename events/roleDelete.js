@@ -15,7 +15,7 @@ module.exports = {
         const logChannel = role.guild.channels.cache.get(LOG_CHANNEL_ID);
         if (logChannel) {
             const embed = new EmbedBuilder()
-                .setTitle('➖ Role Deleted')
+                .setTitle('🗑️ Role Deleted')
                 .setColor(ACCENT_COLOR)
                 .addFields(
                     { name: 'Name', value: role.name || 'Unknown', inline: true }, // Role might be partial
