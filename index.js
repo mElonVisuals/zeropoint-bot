@@ -16,11 +16,14 @@ const { PREFIX, ZEROPOINT_LOGO_URL } = require('./config.js'); // Import configu
 // in the Discord Developer Portal for your bot to function correctly.
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds,           // Required for guild-related events (e.g., guildMemberAdd)
+        GatewayIntentBits.Guilds,           // Required for guild-related events (e.g., guildMemberAdd, channelCreate)
         GatewayIntentBits.GuildMessages,    // Required to receive messages
         GatewayIntentBits.MessageContent,   // CRUCIAL: Required to read the content of messages for commands
-        GatewayIntentBits.GuildMembers,     // CRUCIAL: Required for guildMemberAdd event
-        GatewayIntentBits.GuildPresences    // Required for setting/updating bot presence
+        GatewayIntentBits.GuildMembers,     // CRUCIAL: Required for guildMemberAdd/Remove events
+        GatewayIntentBits.GuildPresences,   // Required for setting/updating bot presence
+        GatewayIntentBits.DirectMessages,   // Optional: If you want to handle DMs
+        GatewayIntentBits.GuildMessageReactions, // Optional: If you want to handle reactions
+        GatewayIntentBits.GuildVoiceStates  // Optional: If you want to monitor voice channels
     ],
     partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User]
 });
@@ -77,10 +80,16 @@ client.on('messageCreate', async message => {
     if (!command) return;
 
     try {
+        // Pass the message and args to the command's execute function
         await command.execute(message, args);
     } catch (error) {
         console.error(`Error executing command ${commandName}:`, error);
-        await message.reply({ content: 'There was an error trying to execute that command!', ephemeral: true });
+        // Reply ephemerally if possible, otherwise send a regular message
+        if (message.replied || message.deferred) {
+            await message.followUp({ content: 'There was an error trying to execute that command!', ephemeral: true });
+        } else {
+            await message.reply({ content: 'There was an error trying to execute that command!', ephemeral: true });
+        }
     }
 });
 
@@ -92,7 +101,7 @@ if (!TOKEN) {
     console.error("Please set the DISCORD_BOT_TOKEN environment variable with your bot's token.");
 } else {
     client.login(TOKEN).catch(error => {
-        if (error.code === 'TOKEN_INVALID') {
+        if (error.code === 'TokenInvalid') { // Use 'TokenInvalid' for discord.js v14
             console.error("Error: Invalid bot token. Please check your DISCORD_BOT_TOKEN environment variable.");
         } else {
             console.error(`An unexpected error occurred during login: ${error.message}`);
