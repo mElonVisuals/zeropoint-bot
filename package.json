@@ -1,16 +1,23 @@
 {
-  "name": "zeropoint-discordbotjs",
+  "name": "zeropoint-discord-bot",
   "version": "1.0.0",
+  "description": "A Discord bot for the ZeroPoint cinematic community.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js",
+    "zeropoint",
+    "fivem",
+    "cinematics"
+  ],
+  "author": "MLVS District",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.21.0",
-    "dotenv": "^17.2.0"
-  },
-  "description": ""
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5"
+  }
 }
