@@ -14,6 +14,11 @@ module.exports.LOG_CHANNEL_ID = '1369865705238954168'; // NEW: Channel for bot l
 module.exports.INTRODUCTIONS_CHANNEL_ID = '1393953737197879396'; // Replace with your actual Introductions channel ID
 module.exports.COMMISSION_INFO_CHANNEL_ID = '1393741240922542192'; // Replace with your actual Commission Info channel ID
 
+// --- Ticket System Settings ---
+module.exports.TICKET_CATEGORY_ID = '1365071340591124500'; // NEW: ID of the category where new tickets will be created
+module.exports.TICKET_LOG_CHANNEL_ID = '1369865688130392145'; // NEW: Channel where ticket creation/closure will be logged
+module.exports.STAFF_ROLE_ID = '1365071265680982056'; // NEW: ID of the role that should have access to all tickets (e.g., 'Moderator', 'Admin')
+
 // --- External URLs ---
 module.exports.YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@melon.visuals"; // Replace with your YouTube URL
 module.exports.WEBSITE_URL = "https://zeropoint.melonvisuals.me/"; // Replace with your website URL
