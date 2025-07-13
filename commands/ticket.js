@@ -181,7 +181,7 @@ module.exports = {
                             }
 
                             console.log(`[DEBUG - TICKET] User ${closeInteraction.user.tag} initiated ticket closure.`);
-                            await closeInteraction.editReply({ content: '🔒 Closing ticket...', flags: [InteractionResponseFlags.Ephemeral] });
+                            await closeInteraction.editReply({ content: '🔒 Closing ticket..', flags: [InteractionResponseFlags.Ephemeral] });
 
                             // Log ticket closure
                             if (logChannel) {
