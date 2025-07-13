@@ -12,17 +12,25 @@ module.exports = {
             // This is crucial because partial messages might not have author or content.
             if (message.partial) {
                 try {
-                    await message.fetch();
+                    // Fetch the message. If it fails, the message might be too old or unavailable.
+                    message = await message.fetch();
                 } catch (error) {
-                    console.warn(`[WARN] Could not fetch partial message (ID: ${message.id}). It might have been deleted too quickly or is unavailable.`);
+                    console.warn(`[WARN] Could not fetch partial message (ID: ${message.id}). It might have been deleted too quickly, is too old, or is unavailable. Skipping log.`);
                     // If fetching fails, we can't log details, so we exit.
                     return;
                 }
             }
 
+            // After fetching (or if not partial), check if message.author is available.
+            // This handles cases where the author might be unavailable (e.g., deleted user, webhook without full info).
+            if (!message.author) {
+                console.warn(`[WARN] Message (ID: ${message.id}) has no author information available. Skipping log.`);
+                return;
+            }
+
             // Ignore messages from bots to prevent logging bot's own deleted messages
             if (message.author.bot) return;
-            // Ignore DMs
+            // Ignore DMs - ensure message.guild exists
             if (!message.guild) return;
 
             if (!LOG_CHANNEL_ID || LOG_CHANNEL_ID === 'YOUR_LOG_CHANNEL_ID') {
@@ -46,7 +54,7 @@ module.exports = {
                 await logChannel.send({ embeds: [embed] });
             }
         } catch (error) {
-            console.error(`An error occurred in messageDelete for message ID ${message.id}:`, error);
+            console.error(`An error occurred in messageDelete for message ID ${message.id || 'undefined'}:`, error);
             // This catch block handles any errors during the event execution.
         }
     },
