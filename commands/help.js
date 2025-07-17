@@ -1,7 +1,7 @@
 // commands/help.js
 // Displays a paginated list of all available commands.
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { PREFIX, ACCENT_COLOR } = require('../config.js');
 
 // Define how many commands per page
@@ -27,7 +27,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle('📚 ZeroPoint Bot Commands')
-                .setDescription(`My prefix is \`${PREFIX}\`\nNavigate through commands using the buttons below.`)
+                .setDescription(`My prefix is \`${PREFIX}\`\n\nNavigate through commands using the buttons below.`)
                 .setColor(ACCENT_COLOR)
                 .setThumbnail('https://melonvisuals.me/test/zeropoint.png')
                 .setFooter({ text: `Page ${page + 1} / ${totalPages} | ZeroPoint Command List` });
@@ -35,16 +35,12 @@ module.exports = {
             if (commandsToShow.length === 0) {
                 embed.addFields({ name: 'No Commands Found', value: 'There are no commands to display on this page.' });
             } else {
-                commandsToShow.forEach((command, index) => {
+                commandsToShow.forEach(command => {
                     embed.addFields({
                         name: `\`${PREFIX}${command.name}\``,
                         value: command.description || 'No description provided.',
-                        inline: false // Changed to false for better readability
+                        inline: false
                     });
-                    // Add a blank field for spacing between commands, except after the last one on the page
-                    if (index < commandsToShow.length - 1) {
-                        embed.addFields({ name: '\u200B', value: '\u200B', inline: false }); // Unicode zero-width space for blank field
-                    }
                 });
             }
             return embed;
@@ -110,7 +106,7 @@ module.exports = {
                 console.error(`[ERROR - HELP] Failed to update help message for ${i.user.tag} on button '${i.customId}':`, error);
                 // Try to send a follow-up if deferUpdate failed or subsequent editReply failed
                 if (!i.replied && !i.deferred) {
-                    await i.reply({ content: '❌ An error occurred while updating the help page. Please try again.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send follow-up reply:", e));
+                    await i.reply({ content: '❌ An error occurred while updating the help page. Please try again.', flags: 64 });
                 }
             }
         });

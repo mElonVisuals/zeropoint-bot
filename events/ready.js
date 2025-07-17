@@ -2,6 +2,7 @@
 // This event fires when the bot successfully connects to Discord.
 
 const { ActivityType } = require('discord.js');
+const { ZEROPOINT_LOGO_URL } = require('../config.js'); // Assuming you might use this for presence later
 
 module.exports = {
     name: 'ready',
@@ -10,13 +11,21 @@ module.exports = {
         console.log(`Logged in as ${client.user.tag}!`);
         console.log('Bot is ready!');
 
-        // --- Set Rich Presence ---
-        // You can choose different activity types: PLAYING, STREAMING, LISTENING, WATCHING, CUSTOM, COMPETING
-        client.user.setActivity('ZeroPoint Server', { type: ActivityType.Watching });
-        // Example for PLAYING: client.user.setActivity('with Cinematics!', { type: ActivityType.Playing });
-        // Example for STREAMING (requires a valid Twitch/YouTube URL):
-        // client.user.setActivity('ZeroPoint Live', { type: ActivityType.Streaming, url: 'YOUR_TWITCH_OR_YOUTUBE_STREAM_URL' });
+        // --- Dynamic Rich Presence ---
+        const activities = [
+            { name: 'Cinematic Visions', type: ActivityType.Watching },
+            { name: 'New Stories', type: ActivityType.Playing },
+            { name: 'Your Ideas', type: ActivityType.Listening },
+            { name: 'melonvisuals.me', type: ActivityType.Watching } // Link to your website
+        ];
 
-        console.log('Bot presence set.');
+        let i = 0;
+        setInterval(() => {
+            const activity = activities[i];
+            client.user.setActivity(activity.name, { type: activity.type });
+            i = (i + 1) % activities.length; // Cycle through activities
+        }, 15000); // Change activity every 15 seconds
+
+        console.log('Bot presence set up for cycling.');
     },
 };
