@@ -1,12 +1,8 @@
 // commands/ticket.js
 // Implements a simple ticket system with button interactions.
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField, InteractionResponseFlags } = require('discord.js'); // Added InteractionResponseFlags
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField, InteractionResponseFlags } = require('discord.js');
 const { ACCENT_COLOR, TICKET_CATEGORY_ID, TICKET_LOG_CHANNEL_ID, STAFF_ROLE_ID, ZEROPOINT_LOGO_URL } = require('../config.js');
-
-// --- DEBUGGING: Check InteractionResponseFlags immediately after import ---
-console.log(`[DEBUG - TICKET] InteractionResponseFlags at top of file:`, InteractionResponseFlags);
-// --- END DEBUGGING ---
 
 module.exports = {
     name: 'ticket',
@@ -64,9 +60,14 @@ module.exports = {
         collector.on('collect', async interaction => {
             console.log(`[DEBUG - TICKET] Create ticket button collected by ${interaction.user.tag}`);
             try {
-                console.log(`[DEBUG - TICKET] Attempting deferReply for create_ticket`);
-                await interaction.deferReply({ flags: [InteractionResponseFlags.Ephemeral] }); // Acknowledge interaction immediately
-                console.log(`[DEBUG - TICKET] deferReply successful for create_ticket`);
+                // Defer the reply immediately to prevent "interaction failed" timeout
+                if (!interaction.deferred && !interaction.replied) {
+                    console.log(`[DEBUG - TICKET] Attempting deferReply for create_ticket`);
+                    await interaction.deferReply({ flags: [InteractionResponseFlags.Ephemeral] });
+                    console.log(`[DEBUG - TICKET] deferReply successful for create_ticket`);
+                } else {
+                    console.log(`[DEBUG - TICKET] Interaction already deferred or replied.`);
+                }
 
                 const guild = interaction.guild;
                 const user = interaction.user;
@@ -82,10 +83,11 @@ module.exports = {
                     return interaction.editReply({ content: `You already have an open ticket: <#${existingChannel.id}>`, flags: [InteractionResponseFlags.Ephemeral] });
                 }
 
+                let ticketChannel;
                 try {
                     console.log(`[DEBUG - TICKET] Attempting to create channel for ${user.tag}`);
                     // Create the ticket channel
-                    const ticketChannel = await guild.channels.create({
+                    ticketChannel = await guild.channels.create({
                         name: `ticket-${user.username.toLowerCase().replace(/[^a-z0-9-]/g, '')}`, // Sanitize username for channel name
                         type: ChannelType.GuildText,
                         parent: TICKET_CATEGORY_ID,
@@ -174,9 +176,13 @@ module.exports = {
                     closeCollector.on('collect', async closeInteraction => {
                         console.log(`[DEBUG - TICKET] Close ticket button collected by ${closeInteraction.user.tag}`);
                         try {
-                            console.log(`[DEBUG - TICKET] Attempting deferReply for close_ticket`);
-                            await closeInteraction.deferReply({ flags: [InteractionResponseFlags.Ephemeral] }); // Acknowledge interaction immediately
-                            console.log(`[DEBUG - TICKET] deferReply successful for close_ticket`);
+                            if (!closeInteraction.deferred && !closeInteraction.replied) {
+                                console.log(`[DEBUG - TICKET] Attempting deferReply for close_ticket`);
+                                await closeInteraction.deferReply({ flags: [InteractionResponseFlags.Ephemeral] });
+                                console.log(`[DEBUG - TICKET] deferReply successful for close_ticket`);
+                            } else {
+                                console.log(`[DEBUG - TICKET] Close interaction already deferred or replied.`);
+                            }
 
                             // Only allow ticket creator or staff to close
                             if (closeInteraction.user.id !== user.id && !closeInteraction.member.roles.cache.has(STAFF_ROLE_ID)) {
@@ -209,6 +215,7 @@ module.exports = {
                             setTimeout(() => ticketChannel.delete().catch(e => console.error(`[ERROR - TICKET] Failed to delete ticket channel:`, e)), 5000);
                         } catch (error) {
                             console.error(`[ERROR - TICKET] Error during ticket closure for ${closeInteraction.user.tag}:`, error);
+                            // Ensure a reply/editReply is sent even on error
                             if (!closeInteraction.replied && !closeInteraction.deferred) {
                                 await closeInteraction.reply({ content: '❌ An error occurred while trying to close the ticket. Please try again.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send follow-up reply for close error:", e));
                             } else {
@@ -242,15 +249,20 @@ module.exports = {
 
                 } catch (error) {
                     console.error('Error creating ticket channel:', error);
-                    await interaction.editReply({ content: '❌ There was an error creating your ticket. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] });
+                    // Ensure a reply/editReply is sent even on error during channel creation
+                    if (!interaction.replied && !interaction.deferred) {
+                        await interaction.reply({ content: '❌ There was an error creating your ticket. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send initial error reply for channel creation:", e));
+                    } else {
+                        await interaction.editReply({ content: '❌ There was an error creating your ticket. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send editReply for channel creation error:", e));
+                    }
                 }
             } catch (error) {
-                console.error(`[ERROR - TICKET] Error during ticket creation for ${interaction.user.tag}:`, error);
-                // If deferReply already happened, use editReply, otherwise reply
+                console.error(`[ERROR - TICKET] Outer catch: Error during ticket creation for ${interaction.user.tag}:`, error);
+                // This is the outer catch, ensure a reply is sent if no deferReply happened yet
                 if (!interaction.replied && !interaction.deferred) {
-                     await interaction.reply({ content: '❌ An unexpected error occurred. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send initial error reply:", e));
+                     await interaction.reply({ content: '❌ An unexpected error occurred. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send initial error reply from outer catch:", e));
                 } else {
-                     await interaction.editReply({ content: '❌ An unexpected error occurred. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send editReply for error:", e));
+                     await interaction.editReply({ content: '❌ An unexpected error occurred. Please try again later.', flags: [InteractionResponseFlags.Ephemeral] }).catch(e => console.error("Failed to send editReply from outer catch:", e));
                 }
             }
         });
