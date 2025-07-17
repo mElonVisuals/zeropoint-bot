@@ -1,59 +1,101 @@
 // events/guildMemberAdd.js
-// This event fires when a new member joins the server.
+// This event fires when a new member joins the guild.
 
-const { EmbedBuilder, Partials } = require('discord.js');
-const { WELCOME_CHANNEL_ID, RULES_CHANNEL_ID, INTRODUCTIONS_CHANNEL_ID, YOUTUBE_CHANNEL_URL, ZEROPOINT_LOGO_URL, ACCENT_COLOR } = require('../config.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionsBitField } = require('discord.js');
+const { WELCOME_CHANNEL_ID, FAREWELL_CHANNEL_ID, UNVERIFIED_ROLE_ID, VERIFIED_ROLE_ID, VERIFICATION_CHANNEL_ID, ACCENT_COLOR, ZEROPOINT_LOGO_URL } = require('../config.js');
 
 module.exports = {
     name: 'guildMemberAdd',
     async execute(member) {
-        try {
-            // If the member is a partial, fetch the full member object.
-            // This is crucial if SERVER MEMBERS INTENT is enabled but data is still partial.
-            if (member.partial) {
-                member = await member.fetch();
-            }
+        console.log(`[EVENT - guildMemberAdd] Member joined: ${member.user.tag} (${member.id})`);
 
-            // After fetching (or if not partial), check if guild is available.
-            if (!member.guild) {
-                console.error(`Error in guildMemberAdd: 'guild' property is still undefined for member ${member.user.tag} after fetching. SERVER MEMBERS INTENT might not be fully applied or there's another issue.`);
-                return;
-            }
+        // --- Verification System Logic ---
+        if (UNVERIFIED_ROLE_ID && VERIFIED_ROLE_ID && VERIFICATION_CHANNEL_ID) {
+            try {
+                const unverifiedRole = member.guild.roles.cache.get(UNVERIFIED_ROLE_ID);
+                const verifiedRole = member.guild.roles.cache.get(VERIFIED_ROLE_ID);
+                const verificationChannel = member.guild.channels.cache.get(VERIFICATION_CHANNEL_ID);
 
-            // Ensure the welcome channel ID is configured
-            if (!WELCOME_CHANNEL_ID || WELCOME_CHANNEL_ID === 'YOUR_WELCOME_CHANNEL_ID') {
-                console.warn("WELCOME_CHANNEL_ID is not configured in config.js. Welcome message will not be sent.");
-                return;
-            }
+                if (!unverifiedRole) {
+                    console.error(`[ERROR - Verification] UNVERIFIED_ROLE_ID (${UNVERIFIED_ROLE_ID}) not found.`);
+                }
+                if (!verifiedRole) {
+                    console.error(`[ERROR - Verification] VERIFIED_ROLE_ID (${VERIFIED_ROLE_ID}) not found.`);
+                }
+                if (!verificationChannel) {
+                    console.error(`[ERROR - Verification] VERIFICATION_CHANNEL_ID (${VERIFICATION_CHANNEL_ID}) not found.`);
+                }
 
-            const channel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-            if (channel) {
-                const embed = new EmbedBuilder()
-                    .setTitle(`👋 Welcome to ZeroPoint, ${member.user.username}!`)
-                    .setDescription(`We're thrilled to have you join our community, the premier destination for captivating YouTube cinematics and bespoke commissions for the FiveM community. Get ready to explore the art of visual storytelling!`)
-                    .setColor(ACCENT_COLOR)
-                    .addFields(
-                        {
-                            name: '🚀 Get Started:',
-                            value: `Head over to <#${RULES_CHANNEL_ID}> to review our guidelines.\nIntroduce yourself in <#${INTRODUCTIONS_CHANNEL_ID}>!`,
-                            inline: false
-                        },
-                        {
-                            name: '🎬 Explore Our Work:',
-                            value: `Check out our latest cinematics on our YouTube channel: [ZeroPoint YouTube](${YOUTUBE_CHANNEL_URL})`,
-                            inline: false
-                        }
-                    )
-                    .setThumbnail(ZEROPOINT_LOGO_URL)
-                    .setFooter({ text: 'ZeroPoint | Your Cinematic Journey Begins' });
+                if (unverifiedRole && verifiedRole && verificationChannel) {
+                    // Assign the unverified role
+                    await member.roles.add(unverifiedRole, 'New member joined, assigning unverified role for verification.');
+                    console.log(`[Verification] Assigned unverified role to ${member.user.tag}.`);
 
-                await channel.send({ content: `Welcome ${member.toString()}!`, embeds: [embed] });
-            } else {
-                console.log(`Warning: Welcome channel with ID ${WELCOME_CHANNEL_ID} not found in guild ${member.guild.name}.`);
+                    // Fetch verification settings from a persistent store (e.g., dashboard config)
+                    // For now, we'll use a placeholder or hardcoded default message/embed if not fetched from dashboard.
+                    // In a real scenario, this would be fetched from your database/dashboard settings.
+                    let verificationMessageContent = `Welcome ${member.toString()}! To gain access to the server, please click the "Verify" button below.`;
+                    let verificationEmbedData = {
+                        title: '✅ Server Verification',
+                        description: 'Please click the button below to verify your account and gain full access to the server. This helps us keep our community safe!',
+                        color: ACCENT_COLOR,
+                        footer: { text: 'ZeroPoint | Verification' },
+                        thumbnail: { url: ZEROPOINT_LOGO_URL },
+                        timestamp: new Date().toISOString()
+                    };
+
+                    // In a full implementation, you'd fetch these from your dashboard's saved settings.
+                    // Example (pseudo-code):
+                    // const guildSettings = await getGuildSettings(member.guild.id);
+                    // if (guildSettings && guildSettings.verification) {
+                    //     verificationMessageContent = guildSettings.verification.message || verificationMessageContent;
+                    //     verificationEmbedData = guildSettings.verification.embed || verificationEmbedData;
+                    // }
+
+                    const verifyButton = new ButtonBuilder()
+                        .setCustomId('verify_button')
+                        .setLabel('Verify')
+                        .setStyle(ButtonStyle.Success)
+                        .setEmoji('✔️');
+
+                    const row = new ActionRowBuilder().addComponents(verifyButton);
+
+                    await verificationChannel.send({
+                        content: verificationMessageContent,
+                        embeds: [new EmbedBuilder(verificationEmbedData)],
+                        components: [row]
+                    });
+                    console.log(`[Verification] Sent verification message to ${verificationChannel.name} for ${member.user.tag}.`);
+                } else {
+                    console.warn(`[WARN - Verification] Missing one or more verification config IDs. Skipping verification for ${member.user.tag}.`);
+                }
+            } catch (error) {
+                console.error(`[ERROR - Verification] Failed to assign unverified role or send verification message for ${member.user.tag}:`, error);
             }
-        } catch (error) {
-            console.error(`An error occurred in guildMemberAdd for ${member.user.tag}:`, error);
-            // This catch block will handle errors during fetching or other operations within the event.
+        } else {
+            console.log(`[INFO - guildMemberAdd] Verification system not fully configured. Skipping verification for ${member.user.tag}.`);
+        }
+
+        // --- Original Welcome Message Logic (Optional, can be removed if verification is strict) ---
+        // You might want to remove or modify this if verification is mandatory and users only see the verification channel.
+        const welcomeChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
+        if (welcomeChannel && welcomeChannel.permissionsFor(member.guild.members.me).has(PermissionsBitField.Flags.SendMessages)) {
+            const welcomeEmbed = new EmbedBuilder()
+                .setTitle(`🎉 Welcome to ${member.guild.name}!`)
+                .setDescription(`Hello ${member.toString()}, we're glad to have you here!`)
+                .setColor(ACCENT_COLOR)
+                .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+                .addFields(
+                    { name: 'Rules', value: `<#${RULES_CHANNEL_ID}>`, inline: true },
+                    { name: 'Introductions', value: `<#${INTRODUCTIONS_CHANNEL_ID}>`, inline: true }
+                )
+                .setFooter({ text: `Member #${member.guild.memberCount}` })
+                .setTimestamp();
+
+            await welcomeChannel.send({ embeds: [welcomeEmbed] }).catch(console.error);
+            console.log(`[EVENT - guildMemberAdd] Sent welcome message to ${welcomeChannel.name} for ${member.user.tag}.`);
+        } else {
+            console.warn(`[WARN - guildMemberAdd] Welcome channel (${WELCOME_CHANNEL_ID}) not found or bot lacks permissions. Skipping welcome message.`);
         }
     },
 };

@@ -19,6 +19,11 @@ module.exports.TICKET_CATEGORY_ID = '1365071340591124500'; // NEW: ID of the cat
 module.exports.TICKET_LOG_CHANNEL_ID = '1369865688130392145'; // NEW: Channel where ticket creation/closure will be logged
 module.exports.STAFF_ROLE_ID = '1365071265680982056'; // NEW: ID of the role that should have access to all tickets (e.g., 'Moderator', 'Admin')
 
+// --- Verification System Settings (NEW) ---
+module.exports.VERIFICATION_CHANNEL_ID = '1369863763611746477'; // The channel where users will verify
+module.exports.UNVERIFIED_ROLE_ID = '1369861485479596134'; // Role assigned to new members before verification
+module.exports.VERIFIED_ROLE_ID = '1365071277064323324'; // Role assigned after successful verification (can be your main member role)
+
 // --- External URLs ---
 module.exports.YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@melon.visuals"; // Replace with your YouTube URL
 module.exports.WEBSITE_URL = "https://zeropoint.melonvisuals.me/"; // Replace with your website URL
